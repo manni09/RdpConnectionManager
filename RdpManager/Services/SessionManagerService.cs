@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using RdpManager.Models;
 
 namespace RdpManager.Services
 {
     /// <summary>
-    /// Manages active RDP sessions and tracks which connections have open windows.
+    /// Manages active RDP and SSH sessions and tracks which connections have open windows.
     /// </summary>
     public static class SessionManagerService
     {
-        private static readonly Dictionary<string, RdpSessionWindow> _activeSessions = new();
+        private static readonly Dictionary<string, Window> _activeSessions = new();
         
         /// <summary>
         /// Event fired when the active sessions change.
@@ -20,7 +21,7 @@ namespace RdpManager.Services
         /// <summary>
         /// Registers an active session for a connection.
         /// </summary>
-        public static void RegisterSession(string connectionId, RdpSessionWindow window)
+        public static void RegisterSession(string connectionId, Window window)
         {
             if (string.IsNullOrEmpty(connectionId)) return;
             
@@ -65,7 +66,7 @@ namespace RdpManager.Services
         /// <summary>
         /// Gets the active session window for a connection, if one exists.
         /// </summary>
-        public static RdpSessionWindow? GetActiveSession(string connectionId)
+        public static Window? GetActiveSession(string connectionId)
         {
             if (string.IsNullOrEmpty(connectionId)) return null;
             
@@ -110,9 +111,9 @@ namespace RdpManager.Services
             
             try
             {
-                if (window.WindowState == System.Windows.WindowState.Minimized)
+                if (window.WindowState == WindowState.Minimized)
                 {
-                    window.WindowState = System.Windows.WindowState.Normal;
+                    window.WindowState = WindowState.Normal;
                 }
                 
                 window.Activate();

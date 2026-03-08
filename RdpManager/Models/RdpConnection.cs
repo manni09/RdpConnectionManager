@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 namespace RdpManager.Models
 {
+    public enum ConnectionType
+    {
+        RDP = 0,
+        SSH = 1
+    }
+
+    public enum SshAuthMethod
+    {
+        Password = 0,
+        PrivateKey = 1,
+        Both = 2
+    }
+
     public class RdpConnection
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -16,6 +29,15 @@ namespace RdpManager.Models
         public string Group { get; set; } = "Default";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? LastConnected { get; set; }
+        
+        // Connection Type
+        public ConnectionType ConnectionType { get; set; } = ConnectionType.RDP;
+        
+        // SSH Settings
+        public SshAuthMethod SshAuthMethod { get; set; } = SshAuthMethod.Password;
+        public string SshPrivateKeyPath { get; set; } = string.Empty;
+        public string EncryptedSshPassphrase { get; set; } = string.Empty;
+        public int SshKeepAliveInterval { get; set; } = 60; // seconds
         
         // RDP Settings
         public bool FullScreen { get; set; } = true;
@@ -51,7 +73,19 @@ namespace RdpManager.Models
         public bool NetworkAutoDetect { get; set; } = true;
         
         public string DisplayName => string.IsNullOrEmpty(Name) ? Hostname : Name;
-        public string ConnectionString => Port == 3389 ? Hostname : $"{Hostname}:{Port}";
+        
+        public int DefaultPort => ConnectionType == ConnectionType.SSH ? 22 : 3389;
+        
+        public string ConnectionString
+        {
+            get
+            {
+                int defaultPort = ConnectionType == ConnectionType.SSH ? 22 : 3389;
+                return Port == defaultPort ? Hostname : $"{Hostname}:{Port}";
+            }
+        }
+        
+        public string ConnectionTypeDisplay => ConnectionType == ConnectionType.SSH ? "SSH" : "RDP";
     }
 
     public class ConnectionGroup
@@ -80,5 +114,6 @@ namespace RdpManager.Models
         public string DefaultGroup { get; set; } = "Default";
         public WindowSettings MainWindowState { get; set; } = new();
         public WindowSettings RdpSessionWindowState { get; set; } = new() { Width = 1200, Height = 800 };
+        public WindowSettings SshSessionWindowState { get; set; } = new() { Width = 900, Height = 600 };
     }
 }

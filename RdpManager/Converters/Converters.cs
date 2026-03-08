@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
+using RdpManager.Models;
 
 namespace RdpManager.Converters
 {
@@ -110,6 +112,30 @@ namespace RdpManager.Converters
                     : Visibility.Collapsed;
             }
             return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converts ConnectionType to a brush color.
+    /// RDP = Blue, SSH = Green
+    /// </summary>
+    public class ConnectionTypeBrushConverter : IValueConverter
+    {
+        private static readonly SolidColorBrush RdpBrush = new(Color.FromRgb(0, 120, 212)); // Blue
+        private static readonly SolidColorBrush SshBrush = new(Color.FromRgb(16, 124, 16)); // Green
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ConnectionType connType)
+            {
+                return connType == ConnectionType.SSH ? SshBrush : RdpBrush;
+            }
+            return RdpBrush;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

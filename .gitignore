@@ -1,7 +1,6 @@
 # Build outputs
 bin/
 obj/
-Release/
 
 # Visual Studio
 .vs/
@@ -28,6 +27,3 @@ packages/
 
 # VS Code
 .vscode/
-
-# Distribution
-*.zip
