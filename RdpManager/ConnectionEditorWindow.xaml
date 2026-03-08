@@ -2,10 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Connection Editor" 
-        Height="750" Width="520"
+        Height="780" Width="540"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
-        MinHeight="500" MinWidth="400"
+        MinHeight="550" MinWidth="440"
         Background="{StaticResource BackgroundBrush}">
     
     <Grid>
@@ -16,54 +16,74 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" 
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
-                Padding="24,20">
-            <StackPanel>
-                <TextBlock x:Name="TitleText" Text="New Connection" 
-                           FontSize="22" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                <TextBlock Text="Enter connection details below"
-                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="0,4,0,0"/>
-            </StackPanel>
+        <Border Grid.Row="0" Background="{StaticResource HeaderGradientBrush}" 
+                Padding="28,24">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" 
+                                  Color="#000000" Opacity="0.12"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Background="{StaticResource PrimaryGradientBrush}" CornerRadius="12" Padding="12">
+                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="20" 
+                               Foreground="White"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="TitleText" Text="New Connection" 
+                               FontSize="20" FontWeight="SemiBold"
+                               Foreground="White"/>
+                    <TextBlock Text="Configure your connection settings"
+                               FontSize="12" Foreground="#94A3B8"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Form -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24,20">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="28,24">
             <StackPanel>
                 <!-- Basic Info -->
-                <TextBlock Text="BASIC INFORMATION" FontSize="11" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                <TextBlock Text="BASIC INFORMATION" FontSize="11" FontWeight="Bold"
+                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
                 
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" 
-                        Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                        Margin="0,0,0,20">
+                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="14" 
+                        Padding="22" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1"
+                        Margin="0,0,0,24" Effect="{StaticResource CardShadow}">
                     <StackPanel>
-                        <TextBlock Text="Display Name" FontSize="13" Margin="0,0,0,6"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBox x:Name="NameBox" Margin="0,0,0,16"/>
+                        <TextBlock Text="Connection Type" FontSize="13" Margin="0,0,0,8"
+                                   Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                        <ComboBox x:Name="ConnectionTypeCombo" Margin="0,0,0,18" SelectionChanged="ConnectionTypeCombo_SelectionChanged">
+                            <ComboBoxItem Content="RDP (Remote Desktop)" IsSelected="True"/>
+                            <ComboBoxItem Content="SSH (Secure Shell)"/>
+                        </ComboBox>
+                        
+                        <TextBlock Text="Display Name" FontSize="13" Margin="0,0,0,8"
+                                   Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                        <TextBox x:Name="NameBox" Margin="0,0,0,18"/>
 
-                        <TextBlock Text="Hostname / IP Address *" FontSize="13" Margin="0,0,0,6"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBox x:Name="HostnameBox" Margin="0,0,0,16"/>
+                        <TextBlock Text="Hostname / IP Address *" FontSize="13" Margin="0,0,0,8"
+                                   Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                        <TextBox x:Name="HostnameBox" Margin="0,0,0,18"/>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="18"/>
+                                <ColumnDefinition Width="110"/>
                             </Grid.ColumnDefinitions>
                             
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Group" FontSize="13" Margin="0,0,0,6"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="Group" FontSize="13" Margin="0,0,0,8"
+                                           Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
                                 <ComboBox x:Name="GroupCombo" IsEditable="True"/>
                             </StackPanel>
                             
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Port" FontSize="13" Margin="0,0,0,6"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock x:Name="PortLabel" Text="Port" FontSize="13" Margin="0,0,0,8"
+                                           Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
                                 <TextBox x:Name="PortBox" Text="3389"/>
                             </StackPanel>
                         </Grid>
@@ -71,20 +91,22 @@
                 </Border>
 
                 <!-- Credentials -->
-                <TextBlock Text="CREDENTIALS" FontSize="11" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                <TextBlock Text="CREDENTIALS" FontSize="11" FontWeight="Bold"
+                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
                 
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" 
-                        Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                        Margin="0,0,0,20">
+                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="14" 
+                        Padding="22" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1"
+                        Margin="0,0,0,24" Effect="{StaticResource CardShadow}">
                     <StackPanel>
-                        <TextBlock Text="Username" FontSize="13" Margin="0,0,0,6"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBox x:Name="UsernameBox" Margin="0,0,0,16"/>
+                        <TextBlock Text="Username" FontSize="13" Margin="0,0,0,8"
+                                   Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                        <TextBox x:Name="UsernameBox" Margin="0,0,0,18"/>
 
-                        <TextBlock Text="Domain (optional)" FontSize="13" Margin="0,0,0,6"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBox x:Name="DomainBox" Margin="0,0,0,16"/>
+                        <StackPanel x:Name="DomainPanel">
+                            <TextBlock Text="Domain (optional)" FontSize="13" Margin="0,0,0,8"
+                                       Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                            <TextBox x:Name="DomainBox" Margin="0,0,0,18"/>
+                        </StackPanel>
 
                         <TextBlock Text="Password" FontSize="13" Margin="0,0,0,6"
                                    Foreground="{StaticResource TextPrimaryBrush}"/>
@@ -95,9 +117,51 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Display Settings -->
-                <TextBlock Text="DISPLAY SETTINGS" FontSize="11" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                <!-- SSH Authentication (only visible for SSH) -->
+                <StackPanel x:Name="SshAuthPanel" Visibility="Collapsed">
+                    <TextBlock Text="SSH AUTHENTICATION" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                    
+                    <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" 
+                            Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                            Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="Authentication Method" FontSize="13" Margin="0,0,0,6"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <ComboBox x:Name="SshAuthMethodCombo" Margin="0,0,0,16">
+                                <ComboBoxItem Content="Password Only" IsSelected="True"/>
+                                <ComboBoxItem Content="Private Key Only"/>
+                                <ComboBoxItem Content="Private Key + Password"/>
+                            </ComboBox>
+                            
+                            <StackPanel x:Name="PrivateKeyPanel">
+                                <TextBlock Text="Private Key File" FontSize="13" Margin="0,0,0,6"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="PrivateKeyPathBox" Grid.Column="0" IsReadOnly="True"/>
+                                    <Button Grid.Column="1" Content="Browse..." Click="BrowsePrivateKey_Click"
+                                            Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Padding="12,6"/>
+                                </Grid>
+                                
+                                <TextBlock Text="Private Key Passphrase (if encrypted)" FontSize="13" Margin="0,0,0,6"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <PasswordBox x:Name="PrivateKeyPassphraseBox"/>
+                                <TextBlock Text=" Leave empty if your key is not encrypted"
+                                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Display Settings (RDP only) -->
+                <StackPanel x:Name="RdpSettingsPanel">
+                    <TextBlock Text="DISPLAY SETTINGS" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
                 
                 <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" 
                         Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
@@ -162,37 +226,45 @@
                 <TextBlock Text="PERFORMANCE" FontSize="11" FontWeight="SemiBold"
                            Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
                 
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" 
-                        Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                        Margin="0,0,0,20">
+                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="14" 
+                        Padding="22" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1"
+                        Margin="0,0,0,24" Effect="{StaticResource CardShadow}">
                     <StackPanel>
-                        <CheckBox x:Name="DesktopCompositionCheck" Content="Desktop Composition" IsChecked="True" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="FontSmoothingCheck" Content="Font Smoothing" IsChecked="True" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="ThemesCheck" Content="Visual Themes" IsChecked="True" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="WindowDragCheck" Content="Show window contents while dragging" IsChecked="True" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="MenuAnimationsCheck" Content="Menu and window animations" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="BitmapCachingCheck" Content="Bitmap caching" IsChecked="True" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="CompressionCheck" Content="Enable compression" IsChecked="True" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="DesktopCompositionCheck" Content="Desktop Composition" IsChecked="True" Margin="0,0,0,14"/>
+                        <CheckBox x:Name="FontSmoothingCheck" Content="Font Smoothing" IsChecked="True" Margin="0,0,0,14"/>
+                        <CheckBox x:Name="ThemesCheck" Content="Visual Themes" IsChecked="True" Margin="0,0,0,14"/>
+                        <CheckBox x:Name="WindowDragCheck" Content="Show window contents while dragging" IsChecked="True" Margin="0,0,0,14"/>
+                        <CheckBox x:Name="MenuAnimationsCheck" Content="Menu and window animations" Margin="0,0,0,14"/>
+                        <CheckBox x:Name="BitmapCachingCheck" Content="Bitmap caching" IsChecked="True" Margin="0,0,0,14"/>
+                        <CheckBox x:Name="CompressionCheck" Content="Enable compression" IsChecked="True" Margin="0,0,0,14"/>
                         <CheckBox x:Name="NetworkAutoDetectCheck" Content="Auto-detect network quality" IsChecked="True"/>
                     </StackPanel>
                 </Border>
+                </StackPanel>
+                <!-- End of RDP Settings Panel -->
 
                 <!-- Description -->
-                <TextBlock Text="DESCRIPTION" FontSize="11" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                <TextBlock Text="NOTES" FontSize="11" FontWeight="Bold"
+                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
                 
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" 
-                        Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="14" 
+                        Padding="22" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1"
+                        Effect="{StaticResource CardShadow}">
                     <TextBox x:Name="DescriptionBox" AcceptsReturn="True" TextWrapping="Wrap" 
-                             Height="80" VerticalScrollBarVisibility="Auto"/>
+                             Height="90" VerticalScrollBarVisibility="Auto" BorderThickness="0"
+                             Background="Transparent"/>
                 </Border>
             </StackPanel>
         </ScrollViewer>
 
         <!-- Footer / Buttons -->
         <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" 
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
-                Padding="24,16">
+                BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,1,0,0"
+                Padding="28,20">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="12" ShadowDepth="-2" Direction="90" 
+                                  Color="#000000" Opacity="0.06"/>
+            </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -201,9 +273,14 @@
                 </Grid.ColumnDefinitions>
                 
                 <Button Grid.Column="1" Content="Cancel" Style="{StaticResource SecondaryButton}"
-                        Width="100" Click="Cancel_Click"/>
-                <Button Grid.Column="2" Content="Save" Style="{StaticResource PrimaryButton}"
-                        Width="100" Margin="12,0,0,0" Click="Save_Click"/>
+                        Width="110" Click="Cancel_Click"/>
+                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}"
+                        Width="120" Margin="14,0,0,0" Click="Save_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center"/>
+                        <TextBlock Text=" Save" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </Grid>
         </Border>
     </Grid>

@@ -20,6 +20,8 @@ namespace RdpManager
         private string _searchText = string.Empty;
         private string _quickConnectHost = string.Empty;
         private string _statusText = "Ready";
+        private string _selectedGroupFilter = "All Groups";
+        private bool _isTreeView = false;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -118,6 +120,9 @@ namespace RdpManager
                 // Deduplicate groups and ensure "Default" is first
                 CleanupGroups();
                 
+                // Populate group filter dropdown
+                LoadGroupFilter();
+                
                 FilterConnections();
                 StatusText = $"Loaded {_connections.Count} connections";
                 LoggingService.Info($"Loaded {_connections.Count} connections");
@@ -130,6 +135,19 @@ namespace RdpManager
                 MessageBox.Show($"Failed to load settings: {ex.Message}", "Error", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+        
+        private void LoadGroupFilter()
+        {
+            GroupFilterCombo.Items.Clear();
+            GroupFilterCombo.Items.Add("All Groups");
+            
+            foreach (var group in _settings.Groups.OrderBy(g => g == "Default" ? "" : g))
+            {
+                GroupFilterCombo.Items.Add(group);
+            }
+            
+            GroupFilterCombo.SelectedIndex = 0;
         }
 
         private void CleanupGroups()
@@ -250,17 +268,190 @@ namespace RdpManager
 
         private void FilterConnections()
         {
-            var filtered = string.IsNullOrWhiteSpace(SearchText)
-                ? _connections.ToList()
-                : _connections.Where(c =>
+            // Start with all connections
+            var filtered = _connections.AsEnumerable();
+            
+            // Filter by group
+            if (!string.IsNullOrEmpty(_selectedGroupFilter) && _selectedGroupFilter != "All Groups")
+            {
+                filtered = filtered.Where(c => c.Group.Equals(_selectedGroupFilter, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            // Filter by search text
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                filtered = filtered.Where(c =>
                     c.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     c.Hostname.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     c.Group.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                    c.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                    c.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+            }
 
-            FilteredConnections = new ObservableCollection<RdpConnection>(
-                filtered.OrderBy(c => c.Group).ThenBy(c => c.DisplayName));
+            var sortedList = filtered.OrderBy(c => c.Group).ThenBy(c => c.DisplayName).ToList();
+            
+            FilteredConnections = new ObservableCollection<RdpConnection>(sortedList);
+            
+            // Update tree view if visible
+            if (_isTreeView)
+            {
+                UpdateTreeView(sortedList);
+            }
+        }
+        
+        private void UpdateTreeView(System.Collections.Generic.List<RdpConnection> connections)
+        {
+            ConnectionTreeView.Items.Clear();
+            
+            var groups = connections.GroupBy(c => c.Group).OrderBy(g => g.Key == "Default" ? "" : g.Key);
+            
+            foreach (var group in groups)
+            {
+                var groupItem = new System.Windows.Controls.TreeViewItem
+                {
+                    Header = CreateGroupHeader(group.Key, group.Count()),
+                    IsExpanded = true,
+                    Tag = group.Key
+                };
+                
+                foreach (var conn in group.OrderBy(c => c.DisplayName))
+                {
+                    var connItem = new System.Windows.Controls.TreeViewItem
+                    {
+                        Header = CreateConnectionHeader(conn),
+                        Tag = conn
+                    };
+                    groupItem.Items.Add(connItem);
+                }
+                
+                ConnectionTreeView.Items.Add(groupItem);
+            }
+        }
+        
+        private object CreateGroupHeader(string groupName, int count)
+        {
+            var panel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            panel.Children.Add(new System.Windows.Controls.TextBlock 
+            { 
+                Text = "📁 ", 
+                FontSize = 14,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            panel.Children.Add(new System.Windows.Controls.TextBlock 
+            { 
+                Text = groupName, 
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 14,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            panel.Children.Add(new System.Windows.Controls.TextBlock 
+            { 
+                Text = $" ({count})", 
+                Foreground = System.Windows.Media.Brushes.Gray,
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            return panel;
+        }
+        
+        private object CreateConnectionHeader(RdpConnection conn)
+        {
+            var panel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            
+            // Connection type indicator
+            var typeColor = conn.ConnectionType == ConnectionType.SSH 
+                ? System.Windows.Media.Color.FromRgb(16, 124, 16) 
+                : System.Windows.Media.Color.FromRgb(0, 120, 212);
+            var typeBorder = new System.Windows.Controls.Border
+            {
+                Background = new System.Windows.Media.SolidColorBrush(typeColor),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(4, 1, 4, 1),
+                Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            typeBorder.Child = new System.Windows.Controls.TextBlock 
+            { 
+                Text = conn.ConnectionTypeDisplay, 
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold
+            };
+            panel.Children.Add(typeBorder);
+            
+            // Active indicator
+            if (SessionManagerService.HasActiveSession(conn.Id))
+            {
+                var indicator = new System.Windows.Shapes.Ellipse
+                {
+                    Width = 8,
+                    Height = 8,
+                    Fill = System.Windows.Media.Brushes.LimeGreen,
+                    Margin = new Thickness(0, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                panel.Children.Add(indicator);
+            }
+            
+            // Name
+            panel.Children.Add(new System.Windows.Controls.TextBlock 
+            { 
+                Text = conn.DisplayName, 
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            
+            // Hostname
+            panel.Children.Add(new System.Windows.Controls.TextBlock 
+            { 
+                Text = $" - {conn.ConnectionString}", 
+                Foreground = System.Windows.Media.Brushes.Gray,
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            
+            return panel;
+        }
+        
+        private void GroupFilterCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (GroupFilterCombo.SelectedItem != null)
+            {
+                _selectedGroupFilter = GroupFilterCombo.SelectedItem.ToString() ?? "All Groups";
+                FilterConnections();
+            }
+        }
+        
+        private void TreeViewToggle_Click(object sender, RoutedEventArgs e)
+        {
+            _isTreeView = TreeViewToggle.IsChecked == true;
+            
+            if (_isTreeView)
+            {
+                ConnectionList.Visibility = Visibility.Collapsed;
+                ConnectionTreeView.Visibility = Visibility.Visible;
+                FilterConnections(); // Refresh tree
+            }
+            else
+            {
+                ConnectionList.Visibility = Visibility.Visible;
+                ConnectionTreeView.Visibility = Visibility.Collapsed;
+            }
+        }
+        
+        private void ConnectionTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (ConnectionTreeView.SelectedItem is System.Windows.Controls.TreeViewItem item && item.Tag is RdpConnection conn)
+            {
+                SelectedConnection = conn;
+            }
+        }
+        
+        private void ConnectionTreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (ConnectionTreeView.SelectedItem is System.Windows.Controls.TreeViewItem item && item.Tag is RdpConnection)
+            {
+                ConnectToSelected();
+            }
         }
 
         private void QuickConnect_Click(object sender, RoutedEventArgs e)
@@ -327,6 +518,7 @@ namespace RdpManager
                 if (!_settings.Groups.Any(g => g.Equals(dialog.Connection.Group, StringComparison.OrdinalIgnoreCase)))
                 {
                     _settings.Groups.Add(dialog.Connection.Group);
+                    LoadGroupFilter();
                 }
                 
                 SaveSettings();
@@ -359,6 +551,7 @@ namespace RdpManager
                 if (!_settings.Groups.Any(g => g.Equals(dialog.Connection.Group, StringComparison.OrdinalIgnoreCase)))
                 {
                     _settings.Groups.Add(dialog.Connection.Group);
+                    LoadGroupFilter();
                 }
                 
                 SaveSettings();

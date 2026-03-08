@@ -3,38 +3,64 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Release](https://img.shields.io/badge/Release-v1.1.0-blue)](https://github.com/your-repo/releases)
 
-**A powerful, modern RDP connection manager for Windows power users and IT professionals.**
+**A powerful, modern RDP and SSH connection manager for Windows power users and IT professionals.**
 
-Missing the discontinued Microsoft Remote Desktop Connection Manager (RDCMan)? RDP Connection Manager brings back everything you loved—and adds much more. Manage all your remote desktop connections in one sleek, organized interface with **embedded RDP sessions** that run directly inside the application window.
+Missing the discontinued Microsoft Remote Desktop Connection Manager (RDCMan)? RDP Connection Manager brings back everything you loved—and adds much more. Manage all your remote desktop and SSH connections in one sleek, organized interface with **embedded sessions** that run directly inside the application window.
 
-Connect to **Windows**, **Linux** (via [xrdp](http://xrdp.org/)), or any system running an RDP-compatible server. No more juggling dozens of mstsc.exe windows. No more re-entering credentials. Just fast, secure, and organized remote desktop management.
+Connect to **Windows**, **Linux** (via RDP with [xrdp](http://xrdp.org/) or SSH), or any remote server. No more juggling dozens of windows. No more re-entering credentials. Just fast, secure, and organized remote connection management.
+
+---
+
+## What's New in v1.1.0
+
+- **Redesigned Modern UI** - Fresh color palette with gradients, shadows, and polished styling
+- **Dark Header** - Professional slate header with gradient branding
+- **Better Visual Hierarchy** - Card-based layouts with improved spacing and typography
+- **Styled Dropdowns** - Custom ComboBox with shadow popups
+- **Segoe MDL2 Icons** - Native Windows icons throughout the interface
+- **SSH Support** - Built-in SSH terminal with ANSI color and key authentication
 
 ---
 
 ## Key Features
 
+### Connection Types
 - **Embedded RDP Client** - Full RDP sessions inside the application window (no separate mstsc.exe windows)
-- **Cross-platform targets** - Connect to Windows, Linux (xrdp), or any RDP-compatible server
+- **SSH Terminal** - Built-in SSH client with full terminal emulation and ANSI color support
+- **Cross-platform targets** - Connect to Windows, Linux, macOS, or any RDP/SSH server
+
+### Organization & Management
 - **Store connections** - Save server hostname, port, username, domain, and password
-- **Secure credential storage** - Passwords encrypted using Windows DPAPI (tied to your user account)
+- **Groups** - Organize connections into groups with filter and tree view
 - **Quick Connect** - Connect to any server instantly without saving
-- **Groups** - Organize connections into groups
 - **Session Tracking** - Visual indicators for active sessions, one-click to bring session to front
+- **Import/Export** - Backup and share connections (passwords optional)
+
+### Security
+- **Secure credential storage** - Passwords encrypted using Windows DPAPI (tied to your user account)
+- **SSH Key Authentication** - Support for private key authentication with optional passphrase
+
+### RDP Features
 - **Auto-resize Display** - RDP resolution adjusts dynamically when you resize the window
 - **Audio & Device Redirection** - Audio playback/capture, smart cards, ports, PnP devices
 - **Performance Settings** - Desktop composition, font smoothing, themes, animations
 - **Connection settings** - Full screen, multi-monitor, clipboard/printer/drive redirection
-- **Import/Export** - Backup and share connections (passwords optional)
+
+### User Experience
 - **Modern UI** - Clean, professional interface with window state persistence
+- **Group Filter** - Filter connections by group or view all
+- **Tree View** - Toggle between flat list and grouped tree view
 
 ## Why Choose RDP Connection Manager?
 
 | Challenge | Solution |
 |-----------|----------|
-| Managing dozens of servers | Organized groups with quick search |
-| Remembering credentials | Secure DPAPI-encrypted storage |
-| Window clutter from mstsc.exe | Embedded sessions in tabbed windows |
+| Managing dozens of servers | Organized groups with filter and tree view |
+| Mixed RDP and SSH servers | Single app for both protocols |
+| Remembering credentials | Secure DPAPI-encrypted storage + SSH keys |
+| Window clutter | Embedded sessions in managed windows |
 | Connecting after window resize | Auto-adjusting resolution for crisp display |
 | Finding your active sessions | Visual indicators + one-click focus |
 | Backing up connections | JSON import/export with optional passwords |
@@ -48,7 +74,7 @@ Connect to **Windows**, **Linux** (via [xrdp](http://xrdp.org/)), or any system 
 
 ### Option 1: Download Release
 
-1. Download `RdpManager-v1.0.0-win-x64.zip` from Releases
+1. Download `RdpManager-v1.1.0-win-x64.zip` from Releases
 2. Extract and run `RdpManager.exe` (self-contained, no .NET install required)
 
 ### Option 2: Build from Source
@@ -122,6 +148,7 @@ For more details, see [SECURITY.md](SECURITY.md).
 - [.NET 10.0](https://dotnet.microsoft.com/) - Framework
 - [WPF](https://docs.microsoft.com/en-us/dotnet/desktop/wpf/) - Windows Presentation Foundation
 - [mstscax.dll](https://docs.microsoft.com/en-us/windows/win32/termserv/remote-desktop-activex-control) - Microsoft RDP ActiveX Control
+- [SSH.NET](https://github.com/sshnet/SSH.NET) - SSH client library for .NET
 - [Newtonsoft.Json](https://www.newtonsoft.com/json) - JSON serialization
 
 ## Contributing

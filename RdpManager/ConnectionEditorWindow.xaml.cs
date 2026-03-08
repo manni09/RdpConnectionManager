@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using Microsoft.Win32;
 using RdpManager.Models;
 using RdpManager.Services;
 
@@ -26,6 +27,9 @@ namespace RdpManager
             // Setup full screen toggle
             FullScreenCheck.Checked += (s, e) => ResolutionGrid.Visibility = Visibility.Collapsed;
             FullScreenCheck.Unchecked += (s, e) => ResolutionGrid.Visibility = Visibility.Visible;
+            
+            // Setup SSH auth method toggle
+            SshAuthMethodCombo.SelectionChanged += SshAuthMethodCombo_SelectionChanged;
 
             if (_isEditing && existingConnection != null)
             {
@@ -42,6 +46,10 @@ namespace RdpManager
             UsernameBox.Text = conn.Username;
             DomainBox.Text = conn.Domain;
             DescriptionBox.Text = conn.Description;
+            
+            // Connection Type
+            ConnectionTypeCombo.SelectedIndex = (int)conn.ConnectionType;
+            UpdateUIForConnectionType();
 
             // Try to select the group, or set it as text
             if (GroupCombo.Items.Contains(conn.Group))
@@ -63,6 +71,21 @@ namespace RdpManager
                 catch
                 {
                     // Password couldn't be decrypted - leave empty
+                }
+            }
+            
+            // SSH Settings
+            SshAuthMethodCombo.SelectedIndex = (int)conn.SshAuthMethod;
+            PrivateKeyPathBox.Text = conn.SshPrivateKeyPath;
+            if (!string.IsNullOrEmpty(conn.EncryptedSshPassphrase))
+            {
+                try
+                {
+                    PrivateKeyPassphraseBox.Password = CredentialService.DecryptPassword(conn.EncryptedSshPassphrase);
+                }
+                catch
+                {
+                    // Passphrase couldn't be decrypted - leave empty
                 }
             }
 
@@ -100,6 +123,60 @@ namespace RdpManager
             // Show resolution grid if not fullscreen
             ResolutionGrid.Visibility = conn.FullScreen ? Visibility.Collapsed : Visibility.Visible;
         }
+        
+        private void ConnectionTypeCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            UpdateUIForConnectionType();
+        }
+        
+        private void UpdateUIForConnectionType()
+        {
+            // Guard against calls during InitializeComponent when elements aren't ready
+            if (SshAuthPanel == null || RdpSettingsPanel == null || DomainPanel == null || PortBox == null)
+                return;
+                
+            bool isSsh = ConnectionTypeCombo.SelectedIndex == 1;
+            
+            // Show/hide SSH settings
+            SshAuthPanel.Visibility = isSsh ? Visibility.Visible : Visibility.Collapsed;
+            
+            // Show/hide RDP settings
+            RdpSettingsPanel.Visibility = isSsh ? Visibility.Collapsed : Visibility.Visible;
+            
+            // Hide domain for SSH (not applicable)
+            DomainPanel.Visibility = isSsh ? Visibility.Collapsed : Visibility.Visible;
+            
+            // Update default port
+            if (!_isEditing || (_existingConnection != null && _existingConnection.Port == _existingConnection.DefaultPort))
+            {
+                PortBox.Text = isSsh ? "22" : "3389";
+            }
+        }
+        
+        private void SshAuthMethodCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // Guard against calls during InitializeComponent
+            if (PrivateKeyPanel == null) return;
+            
+            // Show/hide private key options based on auth method
+            bool showKeyOptions = SshAuthMethodCombo.SelectedIndex > 0; // Not "Password Only"
+            PrivateKeyPanel.Visibility = showKeyOptions ? Visibility.Visible : Visibility.Collapsed;
+        }
+        
+        private void BrowsePrivateKey_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select SSH Private Key",
+                Filter = "Private Key Files|*.pem;*.ppk;*.key;id_rsa;id_ed25519;id_ecdsa|All Files|*.*",
+                CheckFileExists = true
+            };
+            
+            if (dialog.ShowDialog() == true)
+            {
+                PrivateKeyPathBox.Text = dialog.FileName;
+            }
+        }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
@@ -119,11 +196,33 @@ namespace RdpManager
                 PortBox.Focus();
                 return;
             }
+            
+            bool isSsh = ConnectionTypeCombo.SelectedIndex == 1;
+            
+            // Validate SSH-specific requirements
+            if (isSsh)
+            {
+                if (string.IsNullOrWhiteSpace(UsernameBox.Text))
+                {
+                    MessageBox.Show("Username is required for SSH connections.", "Validation Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    UsernameBox.Focus();
+                    return;
+                }
+                
+                var authMethod = (SshAuthMethod)SshAuthMethodCombo.SelectedIndex;
+                if (authMethod != SshAuthMethod.Password && string.IsNullOrWhiteSpace(PrivateKeyPathBox.Text))
+                {
+                    MessageBox.Show("Please select a private key file.", "Validation Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
 
             int screenWidth = 1920;
             int screenHeight = 1080;
 
-            if (FullScreenCheck.IsChecked != true)
+            if (!isSsh && FullScreenCheck.IsChecked != true)
             {
                 if (!int.TryParse(WidthBox.Text, out screenWidth) || screenWidth < 640)
                 {
@@ -155,6 +254,13 @@ namespace RdpManager
                 Group = string.IsNullOrWhiteSpace(GroupCombo.Text) ? "Default" : GroupCombo.Text.Trim(),
                 CreatedAt = _existingConnection?.CreatedAt ?? DateTime.Now,
                 LastConnected = _existingConnection?.LastConnected,
+                
+                // Connection Type
+                ConnectionType = isSsh ? ConnectionType.SSH : ConnectionType.RDP,
+                
+                // SSH Settings
+                SshAuthMethod = (SshAuthMethod)SshAuthMethodCombo.SelectedIndex,
+                SshPrivateKeyPath = PrivateKeyPathBox.Text.Trim(),
 
                 // Display
                 FullScreen = FullScreenCheck.IsChecked == true,
@@ -198,6 +304,21 @@ namespace RdpManager
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Failed to encrypt password: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+            
+            // Encrypt SSH passphrase if provided
+            if (!string.IsNullOrEmpty(PrivateKeyPassphraseBox.Password))
+            {
+                try
+                {
+                    Connection.EncryptedSshPassphrase = CredentialService.EncryptPassword(PrivateKeyPassphraseBox.Password);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to encrypt passphrase: {ex.Message}", "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }

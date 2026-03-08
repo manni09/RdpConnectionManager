@@ -13,6 +13,7 @@
         <converters:PasswordSetConverter x:Key="PasswordSetConverter"/>
         <converters:ActiveSessionConverter x:Key="ActiveSessionConverter"/>
         <converters:HideDefaultGroupConverter x:Key="HideDefaultGroupConverter"/>
+        <converters:ConnectionTypeBrushConverter x:Key="ConnectionTypeBrushConverter"/>
     </Window.Resources>
     
     <Grid>
@@ -23,9 +24,12 @@
         </Grid.RowDefinitions>
 
         <!-- Header / Toolbar -->
-        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" 
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
-                Padding="20,16">
+        <Border Grid.Row="0" Background="{StaticResource HeaderGradientBrush}" 
+                Padding="24,20">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Direction="270" 
+                                  Color="#000000" Opacity="0.15"/>
+            </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -35,27 +39,50 @@
 
                 <!-- App Title -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="" FontSize="24" VerticalAlignment="Center"/>
-                    <TextBlock Text="RDP Manager" FontSize="20" FontWeight="SemiBold" 
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    <Border Background="{StaticResource PrimaryGradientBrush}" CornerRadius="10" Padding="10">
+                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="20" 
+                                   Foreground="White" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="RDP Manager" FontSize="18" FontWeight="SemiBold" 
+                                   Foreground="White"/>
+                        <TextBlock Text="Remote Connection Hub" FontSize="11" 
+                                   Foreground="#94A3B8" Margin="0,2,0,0"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Quick Connect -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="40,0">
-                    <TextBox x:Name="QuickConnectBox" Width="280"
-                             Text="{Binding QuickConnectHost, UpdateSourceTrigger=PropertyChanged}"
-                             KeyDown="QuickConnectBox_KeyDown"/>
-                    <Button Content="Connect" Style="{StaticResource PrimaryButton}" 
-                            Margin="8,0,0,0" Click="QuickConnect_Click"/>
-                </StackPanel>
+                <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="10" 
+                        Margin="40,0" Padding="4" MaxWidth="400">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="QuickConnectBox" BorderThickness="0" Background="Transparent"
+                                 Text="{Binding QuickConnectHost, UpdateSourceTrigger=PropertyChanged}"
+                                 KeyDown="QuickConnectBox_KeyDown" VerticalAlignment="Center" Padding="12,10"/>
+                        <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" 
+                                Click="QuickConnect_Click" Margin="4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center"/>
+                                <TextBlock Text="  Connect" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
 
                 <!-- Actions -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Content="+ New" Style="{StaticResource PrimaryButton}" 
-                            Click="AddConnection_Click" ToolTip="Add new connection (Ctrl+N)"/>
+                    <Button Style="{StaticResource PrimaryButton}" 
+                            Click="AddConnection_Click" ToolTip="Add new connection (Ctrl+N)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center"/>
+                            <TextBlock Text="  New" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Button Content="Import" Style="{StaticResource SecondaryButton}" 
-                            Margin="8,0,0,0" Click="Import_Click"/>
+                            Margin="10,0,0,0" Click="Import_Click"/>
                     <Button Content="Export" Style="{StaticResource SecondaryButton}" 
                             Margin="8,0,0,0" Click="Export_Click"/>
                 </StackPanel>
@@ -63,53 +90,94 @@
         </Border>
 
         <!-- Main Content -->
-        <Grid Grid.Row="1" Margin="20">
+        <Grid Grid.Row="1" Margin="24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="300"/>
-                <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="340"/>
             </Grid.ColumnDefinitions>
 
             <!-- Connection List Panel -->
             <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" 
-                    CornerRadius="12" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    CornerRadius="16" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1"
+                    Effect="{StaticResource CardShadow}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Search -->
-                    <Border Grid.Row="0" Padding="16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                    <!-- Search and Filter -->
+                    <Border Grid.Row="0" Padding="20" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1">
                         <Grid>
-                            <TextBox x:Name="SearchBox" 
-                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                     TextChanged="SearchBox_TextChanged"/>
-                            <TextBlock Text=" Search connections..." IsHitTestVisible="False"
-                                       Foreground="#999999" Margin="14,0,0,0"
-                                       VerticalAlignment="Center" FontSize="13">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Search Box -->
+                            <Border Grid.Row="0" Background="{StaticResource SurfaceHoverBrush}" CornerRadius="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                               Foreground="{StaticResource TextMutedBrush}" 
+                                               VerticalAlignment="Center" Margin="14,0,0,0"/>
+                                    <TextBox x:Name="SearchBox" Grid.Column="1" BorderThickness="0" Background="Transparent"
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             TextChanged="SearchBox_TextChanged" Padding="10,12"/>
+                                    <TextBlock Grid.Column="1" Text="Search connections..." IsHitTestVisible="False"
+                                               Foreground="{StaticResource TextMutedBrush}" Margin="12,0,0,0"
+                                               VerticalAlignment="Center" FontSize="13">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Filter Row -->
+                            <Grid Grid.Row="1" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Group Filter -->
+                                <ComboBox x:Name="GroupFilterCombo" Grid.Column="0"
+                                          SelectionChanged="GroupFilterCombo_SelectionChanged"
+                                          SelectedIndex="0"/>
+                                
+                                <!-- View Toggle -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                                    <ToggleButton x:Name="TreeViewToggle" Content="&#xED41;" 
+                                                  FontFamily="Segoe MDL2 Assets"
+                                                  ToolTip="Group by folder" 
+                                                  Click="TreeViewToggle_Click"
+                                                  Style="{StaticResource IconToggleButton}"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
 
-                    <!-- List -->
+                    <!-- Flat List View -->
                     <ListBox x:Name="ConnectionList" Grid.Row="1"
                              ItemsSource="{Binding FilteredConnections}"
                              SelectedItem="{Binding SelectedConnection}"
                              ItemContainerStyle="{StaticResource ConnectionListItem}"
                              Background="Transparent" BorderThickness="0"
                              MouseDoubleClick="ConnectionList_MouseDoubleClick"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Padding="8">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -119,55 +187,83 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     
-                                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="8"
-                                            Background="{StaticResource PrimaryBrush}" VerticalAlignment="Center">
+                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="12"
+                                            Background="{StaticResource PrimaryGradientBrush}" VerticalAlignment="Center">
                                         <Grid>
-                                            <TextBlock Text="🖥️" FontSize="22" 
+                                            <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="20" 
+                                                       Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <!-- Active session indicator -->
-                                            <Ellipse Width="12" Height="12" 
-                                                     Fill="#4CAF50" Stroke="White" StrokeThickness="2"
+                                            <Ellipse Width="14" Height="14" 
+                                                     Fill="#10B981" Stroke="White" StrokeThickness="2"
                                                      HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                                     Margin="0,0,-2,-2"
+                                                     Margin="0,0,-3,-3"
                                                      Visibility="{Binding Id, Converter={StaticResource ActiveSessionConverter}}"/>
                                         </Grid>
                                     </Border>
                                     
-                                    <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" 
-                                                   FontSize="14" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" 
+                                                       FontSize="14" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <Border Background="{Binding ConnectionType, Converter={StaticResource ConnectionTypeBrushConverter}}" 
+                                                    CornerRadius="6" Padding="8,3" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ConnectionTypeDisplay}" FontSize="10" 
+                                                           Foreground="White" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </StackPanel>
                                         <TextBlock Text="{Binding ConnectionString}" FontSize="12" 
                                                    Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                     </StackPanel>
                                     
-                                    <Border Grid.Column="2" Background="#E5F1FB" CornerRadius="6"
-                                            Padding="10,4" VerticalAlignment="Center"
+                                    <Border Grid.Column="2" Background="{StaticResource PrimaryLightBrush}" CornerRadius="8"
+                                            Padding="12,5" VerticalAlignment="Center"
                                             Visibility="{Binding Group, Converter={StaticResource HideDefaultGroupConverter}}">
-                                        <TextBlock Text="{Binding Group}" FontSize="11" 
+                                        <TextBlock Text="{Binding Group}" FontSize="11" FontWeight="Medium"
                                                    Foreground="{StaticResource PrimaryBrush}"/>
                                     </Border>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                    
+                    <!-- Tree View (Grouped) -->
+                    <TreeView x:Name="ConnectionTreeView" Grid.Row="1"
+                              Background="Transparent" BorderThickness="0"
+                              Visibility="Collapsed" Padding="8"
+                              SelectedItemChanged="ConnectionTreeView_SelectedItemChanged"
+                              MouseDoubleClick="ConnectionTreeView_MouseDoubleClick">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True"/>
+                                <Setter Property="Padding" Value="6"/>
+                                <Setter Property="Margin" Value="0,3,0,3"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
 
                     <!-- Empty State -->
                     <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                Visibility="{Binding IsListEmpty, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="" FontSize="48" HorizontalAlignment="Center" Opacity="0.5"/>
-                        <TextBlock Text="No connections yet" FontSize="16" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextSecondaryBrush}" 
-                                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                Visibility="{Binding IsListEmpty, Converter={StaticResource BoolToVisibilityConverter}}"
+                                x:Name="EmptyState">
+                        <Border Background="{StaticResource SurfaceHoverBrush}" CornerRadius="24" Padding="24" Margin="0,0,0,16">
+                            <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="48" 
+                                       Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="No connections yet" FontSize="18" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" 
+                                   HorizontalAlignment="Center"/>
                         <TextBlock Text="Click '+ New' to add your first connection" FontSize="13"
                                    Foreground="{StaticResource TextSecondaryBrush}" 
-                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                   HorizontalAlignment="Center" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Details Panel -->
             <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" 
-                    CornerRadius="12" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="16" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1"
+                    Effect="{StaticResource CardShadow}"
                     Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -177,94 +273,124 @@
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <Border Grid.Row="0" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <StackPanel>
-                            <TextBlock Text="{Binding SelectedConnection.DisplayName}" 
-                                       FontSize="18" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
-                            <TextBlock Text="{Binding SelectedConnection.ConnectionString}" 
-                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
+                    <Border Grid.Row="0" Padding="24" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource PrimaryGradientBrush}" CornerRadius="12" Padding="12"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="18" 
+                                           Foreground="White"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedConnection.DisplayName}" 
+                                           FontSize="18" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding SelectedConnection.ConnectionString}" 
+                                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
 
                     <!-- Details -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="20">
-                            <TextBlock Text="CONNECTION DETAILS" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                        <StackPanel Margin="24">
+                            <TextBlock Text="CONNECTION DETAILS" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,16"/>
                             
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="90"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Username" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedConnection.Username, TargetNullValue='Not set'}" 
-                                           Foreground="{StaticResource TextPrimaryBrush}" FontSize="13"/>
-                            </Grid>
-                            
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="90"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Domain" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedConnection.Domain, TargetNullValue='Not set'}" 
-                                           Foreground="{StaticResource TextPrimaryBrush}" FontSize="13"/>
-                            </Grid>
-                            
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="90"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Password" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
-                                <TextBlock Grid.Column="1" 
-                                           Text="{Binding SelectedConnection.EncryptedPassword, Converter={StaticResource PasswordSetConverter}}" 
-                                           Foreground="{StaticResource TextPrimaryBrush}" FontSize="13"/>
-                            </Grid>
+                            <Border Background="{StaticResource SurfaceHoverBrush}" CornerRadius="12" Padding="16" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Username" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding SelectedConnection.Username, TargetNullValue='Not set'}" 
+                                                   Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="Medium"/>
+                                    </Grid>
+                                    
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Domain" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding SelectedConnection.Domain, TargetNullValue='Not set'}" 
+                                                   Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="Medium"/>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Password" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding SelectedConnection.EncryptedPassword, Converter={StaticResource PasswordSetConverter}}" 
+                                                   Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="Medium"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
 
-                            <TextBlock Text="DESCRIPTION" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,16,0,8"/>
+                            <TextBlock Text="DESCRIPTION" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
                             <TextBlock Text="{Binding SelectedConnection.Description, TargetNullValue='No description'}"
                                        TextWrapping="Wrap" FontSize="13"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20"/>
 
-                            <TextBlock Text="SETTINGS" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,16,0,8"/>
+                            <TextBlock Text="SETTINGS" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
                             <WrapPanel>
-                                <Border Background="#E5F1FB" CornerRadius="6" Padding="8,4" Margin="0,0,6,6"
+                                <Border Background="{StaticResource PrimaryLightBrush}" CornerRadius="8" Padding="12,6" Margin="0,0,8,8"
                                         Visibility="{Binding SelectedConnection.FullScreen, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock Text="Full Screen" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
+                                    <TextBlock Text="Full Screen" FontSize="11" Foreground="{StaticResource PrimaryBrush}" FontWeight="Medium"/>
                                 </Border>
-                                <Border Background="#E5F1FB" CornerRadius="6" Padding="8,4" Margin="0,0,6,6"
+                                <Border Background="{StaticResource PrimaryLightBrush}" CornerRadius="8" Padding="12,6" Margin="0,0,8,8"
                                         Visibility="{Binding SelectedConnection.RedirectClipboard, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock Text="Clipboard" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
+                                    <TextBlock Text="Clipboard" FontSize="11" Foreground="{StaticResource PrimaryBrush}" FontWeight="Medium"/>
                                 </Border>
-                                <Border Background="#E5F1FB" CornerRadius="6" Padding="8,4" Margin="0,0,6,6"
+                                <Border Background="{StaticResource PrimaryLightBrush}" CornerRadius="8" Padding="12,6" Margin="0,0,8,8"
                                         Visibility="{Binding SelectedConnection.AdminSession, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock Text="Admin" FontSize="11" Foreground="{StaticResource PrimaryBrush}"/>
+                                    <TextBlock Text="Admin" FontSize="11" Foreground="{StaticResource PrimaryBrush}" FontWeight="Medium"/>
                                 </Border>
                             </WrapPanel>
                         </StackPanel>
                     </ScrollViewer>
 
                     <!-- Actions -->
-                    <Border Grid.Row="2" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                    <Border Grid.Row="2" Padding="24" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,1,0,0">
                         <StackPanel>
-                            <Button Content="  Connect" Style="{StaticResource PrimaryButton}" 
-                                    HorizontalAlignment="Stretch" Click="Connect_Click"/>
-                            <Grid Margin="0,10,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" 
+                                    HorizontalAlignment="Stretch" Click="Connect_Click" FontSize="14">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center"/>
+                                    <TextBlock Text="  Connect" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Grid Margin="0,12,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Content="Edit" Style="{StaticResource SecondaryButton}" 
-                                        HorizontalAlignment="Stretch" Click="EditConnection_Click"/>
-                                <Button Grid.Column="2" Content="Delete" Style="{StaticResource SecondaryButton}" 
-                                        HorizontalAlignment="Stretch" Click="DeleteConnection_Click"/>
+                                <Button Grid.Column="0" Style="{StaticResource SecondaryButton}" 
+                                        HorizontalAlignment="Stretch" Click="EditConnection_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center"/>
+                                        <TextBlock Text=" Edit" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" 
+                                        HorizontalAlignment="Stretch" Click="DeleteConnection_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center"/>
+                                        <TextBlock Text=" Delete" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </Grid>
                         </StackPanel>
                     </Border>

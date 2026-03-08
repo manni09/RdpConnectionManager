@@ -8,7 +8,7 @@ using RdpManager.Models;
 namespace RdpManager.Services
 {
     /// <summary>
-    /// Service to launch RDP connections
+    /// Service to launch RDP and SSH connections
     /// </summary>
     public static class RdpLauncherService
     {
@@ -18,20 +18,60 @@ namespace RdpManager.Services
         public static bool UseEmbeddedClient { get; set; } = true;
 
         /// <summary>
-        /// Launches an RDP connection.
+        /// Launches a connection (RDP or SSH based on connection type).
         /// </summary>
         public static void Connect(RdpConnection connection)
         {
             if (connection == null)
                 throw new ArgumentNullException(nameof(connection));
 
-            if (UseEmbeddedClient)
+            // Route to appropriate handler based on connection type
+            if (connection.ConnectionType == ConnectionType.SSH)
+            {
+                ConnectSsh(connection);
+            }
+            else if (UseEmbeddedClient)
             {
                 ConnectEmbedded(connection);
             }
             else
             {
                 ConnectExternal(connection);
+            }
+        }
+
+        /// <summary>
+        /// Connects to an SSH server using the embedded terminal.
+        /// </summary>
+        public static void ConnectSsh(RdpConnection connection)
+        {
+            if (connection == null)
+                throw new ArgumentNullException(nameof(connection));
+
+            // Check if there's already an active session for this connection
+            if (SessionManagerService.HasActiveSession(connection.Id))
+            {
+                LoggingService.Info($"Found existing SSH session for {connection.ConnectionString}, focusing it");
+                SessionManagerService.FocusSession(connection.Id);
+                return;
+            }
+
+            LoggingService.Info($"Initiating SSH connection to {connection.ConnectionString}");
+
+            try
+            {
+                var sessionWindow = new SshSessionWindow();
+                sessionWindow.Show();
+                sessionWindow.Connect(connection);
+                
+                // Update last connected time
+                connection.LastConnected = DateTime.Now;
+            }
+            catch (Exception ex)
+            {
+                LoggingService.Error($"Failed to start SSH session: {ex.Message}", ex);
+                MessageBox.Show($"Failed to connect: {ex.Message}", 
+                    "SSH Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
