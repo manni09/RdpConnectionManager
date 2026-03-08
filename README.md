@@ -8,13 +8,14 @@
 
 Missing the discontinued Microsoft Remote Desktop Connection Manager (RDCMan)? RDP Connection Manager brings back everything you loved—and adds much more. Manage all your remote desktop connections in one sleek, organized interface with **embedded RDP sessions** that run directly inside the application window.
 
-No more juggling dozens of mstsc.exe windows. No more re-entering credentials. Just fast, secure, and organized remote desktop management.
+Connect to **Windows**, **Linux** (via [xrdp](http://xrdp.org/)), or any system running an RDP-compatible server. No more juggling dozens of mstsc.exe windows. No more re-entering credentials. Just fast, secure, and organized remote desktop management.
 
 ---
 
 ## Key Features
 
 - **Embedded RDP Client** - Full RDP sessions inside the application window (no separate mstsc.exe windows)
+- **Cross-platform targets** - Connect to Windows, Linux (xrdp), or any RDP-compatible server
 - **Store connections** - Save server hostname, port, username, domain, and password
 - **Secure credential storage** - Passwords encrypted using Windows DPAPI (tied to your user account)
 - **Quick Connect** - Connect to any server instantly without saving
