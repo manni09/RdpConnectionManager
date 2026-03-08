@@ -62,7 +62,8 @@ namespace RdpManager.Services
             {
                 var sessionWindow = new SshSessionWindow();
                 sessionWindow.Show();
-                sessionWindow.Connect(connection);
+                // Fire and forget but properly handle the task
+                _ = sessionWindow.ConnectAsync(connection);
                 
                 // Update last connected time
                 connection.LastConnected = DateTime.Now;

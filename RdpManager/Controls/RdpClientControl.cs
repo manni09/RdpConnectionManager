@@ -153,8 +153,11 @@ namespace RdpManager.Controls
                     {
                         // Use reflection to set ClearTextPassword
                         var ocxObj = GetOcx();
-                        var prop = ocxObj.GetType().GetProperty("ClearTextPassword");
-                        prop?.SetValue(ocxObj, password);
+                        if (ocxObj != null)
+                        {
+                            var prop = ocxObj.GetType().GetProperty("ClearTextPassword");
+                            prop?.SetValue(ocxObj, password);
+                        }
                     }
                 }
             }
@@ -214,7 +217,7 @@ namespace RdpManager.Controls
                 // Try UpdateSessionDisplaySettings if available (RDP 8.1+)
                 try
                 {
-                    _ocx.UpdateSessionDisplaySettings(
+                    _ocx?.UpdateSessionDisplaySettings(
                         (uint)width,   // ulDesktopWidth
                         (uint)height,  // ulDesktopHeight
                         (uint)width,   // ulPhysicalWidth

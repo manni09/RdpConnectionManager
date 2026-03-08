@@ -24,7 +24,12 @@ namespace RdpManager
         private DateTime _sessionStartTime;
         private DispatcherTimer? _durationTimer;
         private bool _isConnected;
-        private StringBuilder _inputBuffer = new();
+        
+        // Maximum number of paragraphs to keep in terminal (scrollback limit)
+        private const int MaxScrollbackParagraphs = 5000;
+        
+        // Cached frozen brushes for ANSI colors
+        private static readonly Dictionary<Color, SolidColorBrush> CachedBrushes = new();
         
         // ANSI color mapping
         private static readonly Dictionary<int, Color> AnsiColors = new()
@@ -112,7 +117,7 @@ namespace RdpManager
             TerminalOutput.Focus();
         }
 
-        public async void Connect(RdpConnection connection)
+        public async Task ConnectAsync(RdpConnection connection)
         {
             _connection = connection;
             
@@ -138,6 +143,12 @@ namespace RdpManager
                 
                 _sshClient = new SshClient(connectionInfo);
                 _sshClient.ConnectionInfo.Timeout = TimeSpan.FromSeconds(30);
+                
+                // Configure keep-alive if set
+                if (_connection.SshKeepAliveInterval > 0)
+                {
+                    _sshClient.KeepAliveInterval = TimeSpan.FromSeconds(_connection.SshKeepAliveInterval);
+                }
                 
                 LoggingService.Info($"Connecting to SSH: {_connection.ConnectionString}");
                 _sshClient.Connect();
@@ -194,8 +205,9 @@ namespace RdpManager
 
             var authMethods = new List<AuthenticationMethod>();
             
-            // Password authentication
-            if (!string.IsNullOrEmpty(_connection.EncryptedPassword))
+            // Password authentication - only add if auth method includes password
+            if (_connection.SshAuthMethod != SshAuthMethod.PrivateKey &&
+                !string.IsNullOrEmpty(_connection.EncryptedPassword))
             {
                 try
                 {
@@ -208,7 +220,7 @@ namespace RdpManager
                 }
             }
 
-            // Private key authentication
+            // Private key authentication - only add if auth method includes private key
             if (_connection.SshAuthMethod != SshAuthMethod.Password && 
                 !string.IsNullOrEmpty(_connection.SshPrivateKeyPath) &&
                 File.Exists(_connection.SshPrivateKeyPath))
@@ -407,7 +419,7 @@ namespace RdpManager
 
             var run = new Run(text)
             {
-                Foreground = new SolidColorBrush(color)
+                Foreground = GetCachedBrush(color)
             };
             
             if (isBold)
@@ -417,8 +429,25 @@ namespace RdpManager
 
             paragraph.Inlines.Add(run);
             
+            // Limit scrollback to prevent unbounded memory growth
+            while (TerminalOutput.Document.Blocks.Count > MaxScrollbackParagraphs)
+            {
+                TerminalOutput.Document.Blocks.Remove(TerminalOutput.Document.Blocks.FirstBlock);
+            }
+            
             // Move caret to end
             TerminalOutput.CaretPosition = TerminalOutput.Document.ContentEnd;
+        }
+        
+        private static SolidColorBrush GetCachedBrush(Color color)
+        {
+            if (!CachedBrushes.TryGetValue(color, out var brush))
+            {
+                brush = new SolidColorBrush(color);
+                brush.Freeze(); // Freeze for performance and thread-safety
+                CachedBrushes[color] = brush;
+            }
+            return brush;
         }
 
         private void StartDurationTimer()
@@ -512,6 +541,18 @@ namespace RdpManager
                     if (Keyboard.Modifiers == ModifierKeys.Control)
                     {
                         dataToSend = "\x0c"; // Ctrl+L (clear)
+                    }
+                    break;
+                case Key.V:
+                    if (Keyboard.Modifiers == ModifierKeys.Control)
+                    {
+                        // Handle Ctrl+V paste directly to shell
+                        if (Clipboard.ContainsText())
+                        {
+                            SendToShell(Clipboard.GetText());
+                        }
+                        e.Handled = true;
+                        return;
                     }
                     break;
             }

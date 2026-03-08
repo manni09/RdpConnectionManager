@@ -139,6 +139,9 @@ namespace RdpManager
         
         private void LoadGroupFilter()
         {
+            // Preserve current selection if possible
+            var previousSelection = GroupFilterCombo.SelectedItem as string;
+            
             GroupFilterCombo.Items.Clear();
             GroupFilterCombo.Items.Add("All Groups");
             
@@ -147,7 +150,15 @@ namespace RdpManager
                 GroupFilterCombo.Items.Add(group);
             }
             
-            GroupFilterCombo.SelectedIndex = 0;
+            // Restore previous selection or default to "All Groups"
+            if (previousSelection != null && GroupFilterCombo.Items.Contains(previousSelection))
+            {
+                GroupFilterCombo.SelectedItem = previousSelection;
+            }
+            else
+            {
+                GroupFilterCombo.SelectedIndex = 0;
+            }
         }
 
         private void CleanupGroups()

@@ -134,7 +134,7 @@
                                 <ComboBoxItem Content="Private Key + Password"/>
                             </ComboBox>
                             
-                            <StackPanel x:Name="PrivateKeyPanel">
+                            <StackPanel x:Name="PrivateKeyPanel" Visibility="Collapsed">
                                 <TextBlock Text="Private Key File" FontSize="13" Margin="0,0,0,6"
                                            Foreground="{StaticResource TextPrimaryBrush}"/>
                                 <Grid Margin="0,0,0,16">
