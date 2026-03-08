@@ -115,6 +115,8 @@ Passwords are encrypted using Windows Data Protection API (DPAPI) and can only b
 - Exported passwords won't work on other computers or user accounts
 - Credentials are stored in Windows Credential Manager for seamless RDP login
 
+For more details, see [SECURITY.md](SECURITY.md).
+
 ## Built With
 
 - [.NET 10.0](https://dotnet.microsoft.com/) - Framework
